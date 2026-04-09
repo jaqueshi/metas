@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bate Meta!</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --renda: #FF6B6B;
+    --treino: #4ECDC4;
+    --leitura: #FFE66D;
+    --outro: #A78BFA;
+    --bg: #0F0E17;
+    --card-bg: #1A1929;
+    --text: #FFFFFE;
+    --muted: #a7a9be;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Nunito', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* BG decorations */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(ellipse 600px 400px at 10% 20%, rgba(255,107,107,0.08) 0%, transparent 70%),
+      radial-gradient(ellipse 500px 400px at 90% 70%, rgba(78,205,196,0.08) 0%, transparent 70%),
+      radial-gradient(ellipse 400px 300px at 50% 50%, rgba(167,139,250,0.05) 0%, transparent 70%);
+    pointer-events: none; z-index: 0;
+  }
+
+  .container { max-width: 480px; margin: 0 auto; padding: 24px 16px 80px; position: relative; z-index: 1; }
+
+  /* HEADER */
+  .header { text-align: center; margin-bottom: 28px; }
+  .logo { font-family: 'Fredoka One', cursive; font-size: 42px; letter-spacing: -1px; line-height: 1; }
+  .logo span:nth-child(1) { color: var(--renda); }
+  .logo span:nth-child(2) { color: var(--treino); }
+  .logo span:nth-child(3) { color: var(--leitura); }
+  .logo span:nth-child(4) { color: var(--outro); }
+  .header-sub { font-size: 13px; color: var(--muted); margin-top: 4px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+
+  /* STREAK BANNER */
+  .streak-banner {
+    background: linear-gradient(135deg, #FF6B6B22, #A78BFA22);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 14px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px;
+    animation: fadeUp 0.5s ease both;
+  }
+  .streak-left { display: flex; align-items: center; gap: 10px; }
+  .streak-fire { font-size: 28px; animation: bounce 1.5s ease infinite; }
+  .streak-num { font-family: 'Fredoka One', cursive; font-size: 32px; color: var(--renda); line-height: 1; }
+  .streak-label { font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+  .streak-dots { display: flex; gap: 5px; }
+  .sdot { width: 26px; height: 26px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04); display: flex; align-items: center; justify-content: center; font-size: 12px; }
+  .sdot.ok { background: linear-gradient(135deg, #FF6B6B, #FF8E53); border-color: transparent; }
+  .sdot.today { border-color: var(--treino); }
+
+  /* TABS */
+  .tabs { display: flex; gap: 6px; margin-bottom: 20px; background: rgba(255,255,255,0.04); border-radius: 14px; padding: 5px; }
+  .tab {
+    flex: 1; padding: 9px 4px; border: none; background: transparent;
+    border-radius: 10px; font-size: 12px; font-weight: 700; font-family: 'Nunito', sans-serif;
+    color: var(--muted); cursor: pointer; transition: all 0.2s; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .tab.active { background: rgba(255,255,255,0.08); color: var(--text); }
+  .tab:hover:not(.active) { color: var(--text); }
+
+  /* SECTION */
+  .section { display: none; animation: fadeUp 0.3s ease both; }
+  .section.active { display: block; }
+
+  /* CARD */
+  .meta-card {
+    background: var(--card-bg);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 20px;
+    padding: 18px 20px;
+    margin-bottom: 14px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: default;
+  }
+  .meta-card:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+  .meta-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    border-radius: 20px 20px 0 0;
+  }
+  .meta-card[data-tipo="renda"]::before { background: linear-gradient(90deg, var(--renda), #FF8E53); }
+  .meta-card[data-tipo="treino"]::before { background: linear-gradient(90deg, var(--treino), #45B7D1); }
+  .meta-card[data-tipo="leitura"]::before { background: linear-gradient(90deg, var(--leitura), #F7C948); }
+  .meta-card[data-tipo="outro"]::before { background: linear-gradient(90deg, var(--outro), #C084FC); }
+  .meta-card.urgente { border-color: rgba(255,107,107,0.3); box-shadow: 0 0 20px rgba(255,107,107,0.1); }
+
+  .card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
+  .card-left { display: flex; align-items: center; gap: 10px; }
+  .card-emoji {
+    width: 42px; height: 42px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center; font-size: 20px;
+    flex-shrink: 0;
+  }
+  .meta-card[data-tipo="renda"] .card-emoji { background: rgba(255,107,107,0.15); }
+  .meta-card[data-tipo="treino"] .card-emoji { background: rgba(78,205,196,0.15); }
+  .meta-card[data-tipo="leitura"] .card-emoji { background: rgba(255,230,109,0.15); }
+  .meta-card[data-tipo="outro"] .card-emoji { background: rgba(167,139,250,0.15); }
+
+  .card-name { font-size: 15px; font-weight: 800; color: var(--text); line-height: 1.2; }
+  .card-valor { font-size: 12px; color: var(--muted); font-weight: 600; margin-top: 2px; }
+  .card-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+  .prazo-badge {
+    font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 99px;
+    letter-spacing: 0.3px; white-space: nowrap;
+  }
+  .prazo-ok { background: rgba(78,205,196,0.15); color: #4ECDC4; }
+  .prazo-warn { background: rgba(255,230,109,0.15); color: #FFE66D; }
+  .prazo-danger { background: rgba(255,107,107,0.15); color: #FF6B6B; }
+  .prazo-none { background: rgba(255,255,255,0.05); color: var(--muted); }
+
+  /* PROGRESS */
+  .progress-wrap { margin-bottom: 12px; }
+  .progress-label { display: flex; justify-content: space-between; margin-bottom: 6px; }
+  .progress-pct { font-family: 'Fredoka One', cursive; font-size: 18px; }
+  .meta-card[data-tipo="renda"] .progress-pct { color: var(--renda); }
+  .meta-card[data-tipo="treino"] .progress-pct { color: var(--treino); }
+  .meta-card[data-tipo="leitura"] .progress-pct { color: var(--leitura); }
+  .meta-card[data-tipo="outro"] .progress-pct { color: var(--outro); }
+  .progress-sub { font-size: 11px; color: var(--muted); font-weight: 600; align-self: flex-end; }
+  .progress-track {
+    height: 10px; background: rgba(255,255,255,0.06); border-radius: 99px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; border-radius: 99px; transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+  }
+  .progress-fill::after {
+    content: '';
+    position: absolute; top: 0; right: 0; bottom: 0; left: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%);
+    animation: shimmer 2s infinite;
+  }
+  .meta-card[data-tipo="renda"] .progress-fill { background: linear-gradient(90deg, #FF6B6B, #FF8E53); }
+  .meta-card[data-tipo="treino"] .progress-fill { background: linear-gradient(90deg, #4ECDC4, #45B7D1); }
+  .meta-card[data-tipo="leitura"] .progress-fill { background: linear-gradient(90deg, #FFE66D, #F7C948); }
+  .meta-card[data-tipo="outro"] .progress-fill { background: linear-gradient(90deg, #A78BFA, #C084FC); }
+  .urgente .progress-fill { background: linear-gradient(90deg, #FF6B6B, #EF4444) !important; }
+
+  /* CARD FOOTER */
+  .card-footer { display: flex; align-items: center; justify-content: space-between; }
+  .ritmo { font-size: 11px; color: var(--muted); font-weight: 600; }
+  .ritmo strong { color: var(--text); }
+
+  .check-btn {
+    padding: 7px 16px; border-radius: 99px; border: none; font-size: 12px; font-weight: 800;
+    font-family: 'Nunito', sans-serif; cursor: pointer; transition: all 0.2s; letter-spacing: 0.3px;
+    text-transform: uppercase;
+  }
+  .meta-card[data-tipo="renda"] .check-btn { background: rgba(255,107,107,0.15); color: var(--renda); }
+  .meta-card[data-tipo="treino"] .check-btn { background: rgba(78,205,196,0.15); color: var(--treino); }
+  .meta-card[data-tipo="leitura"] .check-btn { background: rgba(255,230,109,0.15); color: var(--leitura); }
+  .meta-card[data-tipo="outro"] .check-btn { background: rgba(167,139,250,0.15); color: var(--outro); }
+  .check-btn:hover { filter: brightness(1.2); transform: scale(1.05); }
+  .check-btn.done {
+    background: rgba(78,205,196,0.15) !important; color: #4ECDC4 !important;
+    cursor: default;
+  }
+  .check-btn.done:hover { transform: none; filter: none; }
+
+  /* WEEK DOTS */
+  .week-dots { display: flex; gap: 5px; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.05); }
+  .wdot { flex: 1; height: 6px; border-radius: 99px; background: rgba(255,255,255,0.06); transition: all 0.3s; }
+  .wdot.done { opacity: 1; }
+  .meta-card[data-tipo="renda"] .wdot.done { background: var(--renda); }
+  .meta-card[data-tipo="treino"] .wdot.done { background: var(--treino); }
+  .meta-card[data-tipo="leitura"] .wdot.done { background: var(--leitura); }
+  .meta-card[data-tipo="outro"] .wdot.done { background: var(--outro); }
+  .wdot.today { border: 1px solid rgba(255,255,255,0.2); }
+
+  /* STATS */
+  .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+  .stat-box {
+    background: var(--card-bg); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px;
+    padding: 14px 10px; text-align: center;
+  }
+  .stat-num { font-family: 'Fredoka One', cursive; font-size: 28px; line-height: 1; }
+  .stat-label { font-size: 10px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 3px; }
+
+  /* LOG */
+  .log-item { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+  .log-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .log-text { font-size: 13px; color: var(--text); flex: 1; font-weight: 600; }
+  .log-time { font-size: 11px; color: var(--muted); }
+
+  /* FORM */
+  .form-card { background: var(--card-bg); border: 1px solid rgba(255,255,255,0.06); border-radius: 20px; padding: 20px; }
+  .form-section-title { font-family: 'Fredoka One', cursive; font-size: 20px; color: var(--text); margin-bottom: 16px; }
+  .field-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: block; margin-top: 14px; }
+  .field-label:first-child { margin-top: 0; }
+  .tipo-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tipo-pill {
+    padding: 7px 14px; border-radius: 99px; border: 1px solid rgba(255,255,255,0.1);
+    background: transparent; font-size: 12px; font-weight: 700; font-family: 'Nunito', sans-serif;
+    color: var(--muted); cursor: pointer; transition: all 0.2s;
+  }
+  .tipo-pill[data-v="renda"].sel { background: rgba(255,107,107,0.2); border-color: var(--renda); color: var(--renda); }
+  .tipo-pill[data-v="treino"].sel { background: rgba(78,205,196,0.2); border-color: var(--treino); color: var(--treino); }
+  .tipo-pill[data-v="leitura"].sel { background: rgba(255,230,109,0.2); border-color: var(--leitura); color: var(--leitura); }
+  .tipo-pill[data-v="outro"].sel { background: rgba(167,139,250,0.2); border-color: var(--outro); color: var(--outro); }
+  .tipo-pill:hover { border-color: rgba(255,255,255,0.2); color: var(--text); }
+
+  input[type="text"], input[type="number"], input[type="date"] {
+    width: 100%; padding: 11px 14px;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px; color: var(--text); font-size: 14px; font-family: 'Nunito', sans-serif; font-weight: 600;
+    outline: none; transition: border-color 0.2s;
+  }
+  input:focus { border-color: rgba(255,255,255,0.2); }
+  input::placeholder { color: rgba(255,255,255,0.2); }
+  input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.5); }
+  .input-row { display: flex; gap: 8px; }
+  .input-row input:first-child { flex: 0 0 100px; }
+
+  .create-btn {
+    width: 100%; margin-top: 18px; padding: 13px;
+    background: linear-gradient(135deg, #FF6B6B, #A78BFA);
+    border: none; border-radius: 14px; color: #fff; font-size: 15px; font-weight: 800;
+    font-family: 'Fredoka One', cursive; cursor: pointer; letter-spacing: 0.5px;
+    transition: all 0.2s; text-transform: uppercase;
+  }
+  .create-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(167,139,250,0.3); }
+  .create-btn:active { transform: translateY(0); }
+
+  /* CONFETTI particle */
+  .particle {
+    position: fixed; pointer-events: none; z-index: 9999;
+    width: 8px; height: 8px; border-radius: 2px;
+    animation: fall 1s ease-out forwards;
+  }
+  @keyframes fall {
+    0% { opacity: 1; transform: translateY(0) rotate(0deg); }
+    100% { opacity: 0; transform: translateY(120px) rotate(540deg); }
+  }
+
+  /* MOTIVACAO */
+  .moti-box {
+    background: linear-gradient(135deg, rgba(255,107,107,0.08), rgba(167,139,250,0.08));
+    border: 1px solid rgba(255,255,255,0.06); border-radius: 16px;
+    padding: 14px 18px; margin-top: 8px; text-align: center;
+    font-size: 13px; font-weight: 700; color: var(--muted);
+    font-style: italic;
+  }
+
+  /* SECTION TITLE */
+  .sec-title { font-family: 'Fredoka One', cursive; font-size: 22px; color: var(--text); margin-bottom: 16px; }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+  @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(200%); } }
+
+  .empty { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 14px; font-weight: 600; }
+  .empty span { font-size: 36px; display: block; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="logo">
+      <span>B</span><span>A</span><span>T</span><span>E</span>
+      <span style="color:var(--muted); font-size:28px;"> </span>
+      <span>M</span><span style="color:var(--treino)">E</span><span style="color:var(--leitura)">T</span><span style="color:var(--outro)">A</span><span style="color:var(--renda)">!</span>
+    </div>
+    <div class="header-sub">seu app de metas bombástico 🚀</div>
+  </div>
+
+  <div class="streak-banner">
+    <div class="streak-left">
+      <div class="streak-fire">🔥</div>
+      <div>
+        <div class="streak-num" id="streak-num">0</div>
+        <div class="streak-label">dias seguidos</div>
+      </div>
+    </div>
+    <div class="streak-dots" id="streak-dots"></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('hoje')">Hoje</button>
+    <button class="tab" onclick="showTab('metas')">Metas</button>
+    <button class="tab" onclick="showTab('stats')">Stats</button>
+    <button class="tab" onclick="showTab('nova')">+ Nova</button>
+  </div>
+
+  <div class="section active" id="tab-hoje">
+    <div id="cards-hoje"></div>
+    <div class="moti-box" id="moti"></div>
+  </div>
+
+  <div class="section" id="tab-metas">
+    <div class="sec-title">Suas metas 🎯</div>
+    <div id="cards-metas"></div>
+  </div>
+
+  <div class="section" id="tab-stats">
+    <div class="sec-title">Seu progresso 📊</div>
+    <div class="stats-grid">
+      <div class="stat-box"><div class="stat-num" style="color:var(--renda)" id="s-streak">0</div><div class="stat-label">streak</div></div>
+      <div class="stat-box"><div class="stat-num" style="color:var(--treino)" id="s-hoje">0/0</div><div class="stat-label">hoje</div></div>
+      <div class="stat-box"><div class="stat-num" style="color:var(--leitura)" id="s-total">0</div><div class="stat-label">check-ins</div></div>
+    </div>
+    <div id="log-list"></div>
+  </div>
+
+  <div class="section" id="tab-nova">
+    <div class="form-card">
+      <div class="form-section-title">Criar meta nova ✨</div>
+      <label class="field-label">Tipo</label>
+      <div class="tipo-pills">
+        <button class="tipo-pill sel" data-v="renda" onclick="selTipo(this)">💰 Renda</button>
+        <button class="tipo-pill" data-v="treino" onclick="selTipo(this)">💪 Treino</button>
+        <button class="tipo-pill" data-v="leitura" onclick="selTipo(this)">📚 Leitura</button>
+        <button class="tipo-pill" data-v="outro" onclick="selTipo(this)">⚡ Outro</button>
+      </div>
+      <label class="field-label">Nome da meta</label>
+      <input type="text" id="f-nome" placeholder="Ex: Ganhar R$1000 no mês" />
+      <label class="field-label">Valor alvo</label>
+      <div class="input-row">
+        <input type="number" id="f-alvo" placeholder="1000" min="1" />
+        <input type="text" id="f-unidade" placeholder="R$ / páginas / km..." />
+      </div>
+      <label class="field-label">Data limite (opcional)</label>
+      <input type="date" id="f-prazo" />
+      <button class="create-btn" onclick="criarMeta()">🚀 Criar meta!</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const EMOJIS = { renda:'💰', treino:'💪', leitura:'📚', outro:'⚡' };
+const FRASES = [
+  "\"Seja tão bom que eles não possam te ignorar.\"",
+  "\"Disciplina é escolher entre o que você quer agora e o que você quer mais.\"",
+  "\"O segredo é começar. Depois é só não parar.\"",
+  "\"Cada treino, cada página, cada real conta.\"",
+  "\"Amanhã você vai agradecer o que fez hoje.\"",
+  "\"Constância > Intensidade. Sempre.\"",
+];
+
+let selectedTipo = 'renda';
+
+let data = JSON.parse(localStorage.getItem('batemeta_v3') || 'null') || {
+  metas: [
+    { id:1, tipo:'renda', nome:'Renda extra', alvo:1000, unidade:'R$', atual:340, checkins:[], prazo:'2026-04-30' },
+    { id:2, tipo:'treino', nome:'Treino semanal', alvo:4, unidade:'treinos', atual:2, checkins:[], prazo:null },
+    { id:3, tipo:'leitura', nome:'Leitura diária', alvo:30, unidade:'páginas', atual:18, checkins:[], prazo:null },
+  ],
+  log: [],
+  nid: 4
+};
+
+function save() { localStorage.setItem('batemeta_v3', JSON.stringify(data)); }
+function hoje() { return new Date().toISOString().split('T')[0]; }
+function pct(m) { return Math.min(100, Math.round(m.atual / m.alvo * 100)); }
+
+function diasRestantes(p) {
+  if (!p) return null;
+  return Math.ceil((new Date(p+'T12:00:00') - new Date()) / 86400000);
+}
+
+function badgeInfo(m) {
+  const d = diasRestantes(m.prazo);
+  if (d === null) return { cls:'prazo-none', txt:'sem prazo' };
+  if (d < 0) return { cls:'prazo-danger', txt:`vencida ${Math.abs(d)}d atrás` };
+  if (d === 0) return { cls:'prazo-danger', txt:'vence hoje!' };
+  if (d <= 7) return { cls:'prazo-warn', txt:`${d} dias` };
+  return { cls:'prazo-ok', txt:`${d} dias` };
+}
+
+function showTab(id) {
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', ['hoje','metas','stats','nova'][i] === id));
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  render();
+}
+
+function makeCard(m, slim) {
+  const p = pct(m);
+  const h = hoje();
+  const feito = (m.checkins||[]).includes(h);
+  const d = diasRestantes(m.prazo);
+  const urgente = d !== null && d <= 7 && d >= 0;
+  const badge = badgeInfo(m);
+
+  let ritmoTxt = '';
+  if (m.prazo && d !== null && d > 0) {
+    const falta = m.alvo - m.atual;
+    if (falta > 0) ritmoTxt = `<span class="ritmo">Meta: <strong>${(falta/d).toFixed(1)} ${m.unidade}/dia</strong></span>`;
+    else ritmoTxt = `<span class="ritmo" style="color:#4ECDC4">✓ Meta atingida!</span>`;
+  }
+
+  const semana = [];
+  for(let i=6;i>=0;i--) { const dd=new Date(); dd.setDate(dd.getDate()-i); semana.push(dd.toISOString().split('T')[0]); }
+  const dots = slim ? '' : `<div class="week-dots">${semana.map((dd,i)=>`<div class="wdot${(m.checkins||[]).includes(dd)?' done':''}${i===6?' today':''}"></div>`).join('')}</div>`;
+
+  return `<div class="meta-card${urgente?' urgente':''}" data-tipo="${m.tipo}">
+    <div class="card-top">
+      <div class="card-left">
+        <div class="card-emoji">${EMOJIS[m.tipo]||'⚡'}</div>
+        <div>
+          <div class="card-name">${m.nome}</div>
+          <div class="card-valor">${m.atual} / ${m.alvo} ${m.unidade}</div>
+        </div>
+      </div>
+      <div class="card-right">
+        <span class="prazo-badge ${badge.cls}">${badge.txt}</span>
+      </div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-label">
+        <span class="progress-pct">${p}%</span>
+        <span class="progress-sub">${urgente ? '⚠️ urgente' : ''}</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" style="width:${p}%"></div></div>
+    </div>
+    <div class="card-footer">
+      ${ritmoTxt}
+      <button class="check-btn${feito?' done':''}" onclick="checkin(${m.id})">${feito ? '✅ Feito!' : '+ Registrar'}</button>
+    </div>
+    ${dots}
+  </div>`;
+}
+
+function confetti(x, y) {
+  const colors = ['#FF6B6B','#4ECDC4','#FFE66D','#A78BFA','#FF8E53'];
+  for(let i=0;i<12;i++) {
+    const el = document.createElement('div');
+    el.className = 'particle';
+    el.style.cssText = `left:${x + (Math.random()-0.5)*60}px; top:${y}px; background:${colors[i%colors.length]}; transform:rotate(${Math.random()*360}deg)`;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1000);
+  }
+}
+
+function checkin(id) {
+  const m = data.metas.find(x=>x.id===id);
+  if (!m || (m.checkins||[]).includes(hoje())) return;
+  if (!m.checkins) m.checkins = [];
+  m.checkins.push(hoje());
+  const inc = Math.max(1, Math.ceil(m.alvo * 0.12));
+  m.atual = Math.min(m.alvo, m.atual + inc);
+  data.log.unshift({ nome:m.nome, tipo:m.tipo, data: new Date().toLocaleString('pt-BR'), val:inc, un:m.unidade });
+  save();
+  const btn = event.target;
+  if(btn) confetti(btn.getBoundingClientRect().left + 30, btn.getBoundingClientRect().top);
+  render();
+}
+
+function render() {
+  // hoje
+  const ch = document.getElementById('cards-hoje');
+  if (ch) ch.innerHTML = data.metas.map(m=>makeCard(m,true)).join('');
+  document.getElementById('moti').textContent = FRASES[new Date().getDay() % FRASES.length];
+
+  // metas
+  const cm = document.getElementById('cards-metas');
+  if (cm) {
+    if (!data.metas.length) cm.innerHTML = '<div class="empty"><span>🎯</span>Nenhuma meta ainda!<br>Crie uma na aba + Nova</div>';
+    else cm.innerHTML = data.metas.map(m=>makeCard(m,false)).join('');
+  }
+
+  // streak banner
+  const allC = data.metas.flatMap(m=>m.checkins||[]);
+  let streak = 0;
+  for(let i=0;;i++) { const d=new Date(); d.setDate(d.getDate()-i); if(allC.includes(d.toISOString().split('T')[0])) streak++; else break; }
+  document.getElementById('streak-num').textContent = streak;
+  const sdd = document.getElementById('streak-dots');
+  if (sdd) {
+    const semana = [];
+    for(let i=6;i>=0;i--) { const d=new Date(); d.setDate(d.getDate()-i); semana.push(d.toISOString().split('T')[0]); }
+    sdd.innerHTML = semana.map((d,i)=>`<div class="sdot${allC.includes(d)?' ok':''}${i===6?' today':''}">${allC.includes(d)?'✓':''}</div>`).join('');
+  }
+
+  // stats
+  const h = hoje();
+  const completas = data.metas.filter(m=>(m.checkins||[]).includes(h)).length;
+  const s1=document.getElementById('s-streak'); if(s1) s1.textContent=streak;
+  const s2=document.getElementById('s-hoje'); if(s2) s2.textContent=completas+'/'+data.metas.length;
+  const s3=document.getElementById('s-total'); if(s3) s3.textContent=data.log.length;
+  const ll=document.getElementById('log-list');
+  if (ll) {
+    if(!data.log.length) { ll.innerHTML='<div class="empty"><span>📋</span>Nenhum registro ainda.</div>'; }
+    else ll.innerHTML = data.log.slice(0,15).map(e=>`
+      <div class="log-item">
+        <div class="log-dot" style="background:${e.tipo==='renda'?'#FF6B6B':e.tipo==='treino'?'#4ECDC4':'#FFE66D'}"></div>
+        <div class="log-text">${EMOJIS[e.tipo]||'⚡'} ${e.nome} +${e.val} ${e.un}</div>
+        <div class="log-time">${e.data}</div>
+      </div>`).join('');
+  }
+}
+
+function selTipo(el) {
+  document.querySelectorAll('.tipo-pill').forEach(p=>p.classList.remove('sel'));
+  el.classList.add('sel');
+  selectedTipo = el.dataset.v;
+}
+
+function criarMeta() {
+  const nome = document.getElementById('f-nome').value.trim();
+  const alvo = parseInt(document.getElementById('f-alvo').value);
+  const un = document.getElementById('f-unidade').value.trim() || 'un';
+  const prazo = document.getElementById('f-prazo').value || null;
+  if (!nome || !alvo) { alert('Preencha o nome e o valor da meta!'); return; }
+  data.metas.push({ id:data.nid++, tipo:selectedTipo, nome, alvo, unidade:un, atual:0, checkins:[], prazo });
+  document.getElementById('f-nome').value='';
+  document.getElementById('f-alvo').value='';
+  document.getElementById('f-unidade').value='';
+  document.getElementById('f-prazo').value='';
+  save();
+  showTab('hoje');
+}
+
+render();
+</script>
+</body>
+</html>
